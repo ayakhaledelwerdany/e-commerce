@@ -3,6 +3,9 @@ import { globalErrorHandling } from "./middleware/asyncHandler.js"
 import cartRouter from "./modules/cart/cart.routes.js"
 export const initApp = (app, express)=>{
     //parse req
+    app.all('*',(req,res,next)=>{
+        return res.json({message:"invalid url"})
+    })
     app.use(express.json())
     app.use('/uploads',express.static('uploads'))
     //routing
