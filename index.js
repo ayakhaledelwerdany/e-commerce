@@ -6,6 +6,9 @@ import categoryRouter from './src/modules/category/category.routes.js'
 import { globalErrorHandling } from './src/middleware/asyncHandler.js'
 import subcategoryRouter from './src/modules/subcategory/subcategory.routes.js'
 import { initApp } from './src/initApp.js'
+app.all('*',(req,res,next)=>{
+    return res.json({message:"invalid url"})
+})
 const app = express()
 const port = process.env.port ||3000
 dotenv.config({path: path.resolve('./config/.env')})
