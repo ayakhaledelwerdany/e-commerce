@@ -4,6 +4,7 @@ import { AppError } from "../../utils/appError.js"
 import { discountTypes } from "../../utils/constant/enum.js"
 import { messages } from "../../utils/constant/messages.js"
 
+// create order
 export const createOrder = async(req,res,next) =>{
     // get data from request
     const {phone , street , coupon , paymentMethod } = req.body

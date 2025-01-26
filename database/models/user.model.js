@@ -49,6 +49,16 @@ const userSchema = new Schema({
             ref: "Product"
         }
     ],
+    isDeleted:{
+        type:Boolean,
+        default:false
+    },
+    otp:String,
+    otpExpired : Date,
+    confirmEmail: { 
+    type: Boolean, 
+    default: false 
+}, 
 },
    {
         timestamps: true

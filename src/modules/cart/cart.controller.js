@@ -2,6 +2,7 @@ import { Cart, Product } from "../../../database/index.js"
 import { AppError } from "../../utils/appError.js"
 import { messages } from "../../utils/constant/messages.js"
 
+// add product to cart
 export const addToCart = async (req, res, next) => {
     // get data from request
     const { productId, quantity } = req.body;
@@ -45,3 +46,24 @@ export const addToCart = async (req, res, next) => {
         data
     });
 };
+// delete product from cart
+export const deleteProduct = async(req,res, next) =>{
+// get data from req
+const {productId} = req.params
+// check if product exist in cart & update the cart
+const productExistInCart = await Cart.findByIdAndUpdate(
+    {user: req.authUser._id},
+    { $pull: { products: { productId } } }, // Remove product from the cart
+    { new: true } // Return updated cart
+)
+if(!productExistInCart){
+    return next(new AppError(messages.product.notFound ,404))
+}
+// send res
+return res.status(200).json({
+    message: messages.product.deletedSuccessfully,
+    success: true,
+    data : Cart
+});
+}
+

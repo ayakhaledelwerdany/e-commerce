@@ -2,6 +2,7 @@ import { Product, Review } from "../../../database/index.js"
 import { AppError } from "../../utils/appError.js"
 import { messages } from "../../utils/constant/messages.js"
 
+// add review
 export const addReview = async(req,res,next) =>{
     // get data from req
     const {comment , rate} = req.body
