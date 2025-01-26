@@ -85,3 +85,60 @@ return res.status(200).json({
     data: updateBrand
 })
 }
+// delete brand 
+export const deleteBrand = async(req,res,next)=>{
+// get data from req 
+const {brandId} = req.params
+// check existance
+const brandExist = await Brand.findById(brandId)
+if(!brandExist){
+    return next(new AppError(messages.brand.notFound, 404))
+}
+// Delete the associated image from Cloudinary
+if (brandExist.logo && brandExist.logo.public_id) {
+    await cloudinary.uploader.destroy(brandExist.logo.public_id);
+}
+// Delete the brand from the database
+const deletedBrand = await Brand.findByIdAndDelete(brandId);
+if (!deletedBrand) {
+    return next(new AppError(messages.brand.failToDelete, 500));
+}
+//send response
+return res.status(200).json({
+    message: messages.brand.deletedSuccessfully,
+    success: true,
+});
+}
+// get all brands
+export const getAllBrands = async(req,res,next) =>{
+// Extract query parameters for pagination and sorting
+const { page = 1, limit = 10, sort = "name", order = "asc" } = req.query;
+
+// Convert page and limit to integers
+const pageNum = parseInt(page);
+const limitNum = parseInt(limit);
+
+// Determine the sorting order
+const sortOrder = order === "desc" ? -1 : 1;
+
+// Get the total count of brands
+const totalBrands = await Brand.countDocuments();
+
+// Retrieve the brands with pagination and sorting
+const brands = await Brand.find()
+    .sort({ [sort]: sortOrder })
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum);
+if(!brands){
+    return next(new AppError("Failed to retrieve brands" , 500))
+}
+// Send the response
+return res.status(200).json({
+    message: "Brands retrieved successfully",
+    success: true,
+    totalBrands,
+    totalPages: Math.ceil(totalBrands / limitNum),
+    currentPage: pageNum,
+    data: brands,
+});
+}

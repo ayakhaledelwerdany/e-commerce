@@ -26,7 +26,8 @@ export const generalFields = {
 )),
     password: joi.string().pattern(new RegExp(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/)),
     cPassword : joi.string().valid(joi.ref('password')),
-    DOB: joi.string()
+    DOB: joi.string(),
+    otp: joi.string().length(5).required(),
 }
 export const isValid = (schema)=>{
     return (req,res,next)=>{

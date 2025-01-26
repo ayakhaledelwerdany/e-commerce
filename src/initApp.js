@@ -1,4 +1,5 @@
 import bodyParser from 'body-parser';
+import Stripe from 'stripe';
 import { authRouter, brandRouter, categoryRouter ,couponRouter,orderRouter,productRouter,reviewRouer,subcategoryRouter, wishlistRouter} from "./modules/index.js"
 import { asyncHandler, globalErrorHandling } from "./middleware/asyncHandler.js"
 import cartRouter from "./modules/cart/cart.routes.js"
@@ -6,20 +7,24 @@ import { status } from "./utils/constant/enum.js"
 import { Cart, Product } from "../database/index.js"
 export const initApp = (app, express)=>{
     //parse req
-    app.all('*',(req,res,next)=>{
-        return res.json({message:"invalid url"})
-    })
+  //  app.all('*',(req,res,next)=>{
+       // return res.json({message:"invalid url"})
+   // })
     app.post('/webhook', bodyParser.raw({type: 'application/json'}), asyncHandler(async (req, res) => {
         const payload = req.body;
         const sig = req.headers['stripe-signature'].toString();
-      
-        let event = stripe.webhooks.constructEvent(payload, sig, 'whsec_...');
+        const stripe = new Stripe(process.env.STRIPE_KEY)
+        let event = stripe.webhooks.constructEvent(payload, sig, '');
         if (
           event.type === 'checkout.session.completed'
           || event.type === 'checkout.session.async_payment_succeeded'
         ) {
             const checkout = event.data.object;
             const orderId = checkout.metaData.orderId;
+            const cartId = checkout.metadata.cartId;
+            // clear cart
+            await Cart.findByIdAndUpdate(cartId,{products:[]})
+            // update order status
             const orderExist = await Order.findByIdAndUpdate(orderId, {status:'Placed'},{new:true})
             await Cart.findOneAndUpdate({usee:orderExist.user}, {products: []},{new:true})
             for (const product of orderExist.products) {
