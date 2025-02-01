@@ -37,7 +37,6 @@ export const addCategory = async(req,res,next)=>{
         data: createdCategory
 })
 }
-
 // update category
 export const updateCategory = async(req,res,next)=>{
     const {name} = req.body
@@ -75,4 +74,25 @@ export const getAllCategories = async ( req,res,next )=>{
         data: categories
     })
 
+}
+// delete category 
+export const deleteCategory = async(req,res,next) =>{
+    // get data from req
+    const {categoryId} = req.params
+    // check existance of category & delete
+    const categoryExistInCategories = await Category.findByIdAndDelete(categoryId)
+    if(!categoryExistInCategories)
+        {
+         return next(new AppError(messages.category.notFound , 404))
+        }
+      // Delete associated image file if it exists
+    if (categoryExistInCategories.image?.path) {
+        deleteFile(categoryExistInCategories.image.path);
+    }
+
+    // Respond with success
+    return res.status(200).json({
+        message: messages.category.deletedSuccessfully,
+        success: true,
+    });
 }
