@@ -118,3 +118,38 @@ export const createOrder = async(req,res,next) =>{
         data: createdOrder
     })
 }
+// cancel order 
+export const cancelOrder = async(req,res,next) =>{
+// get data from req
+const {orderId} = req.params 
+// check existance
+const orderExist = await Order.findById(orderId)
+if(!orderExist){
+    return next(new AppError(messages.order.notFound , 404))
+}
+// delete order from database
+const deletedOrder = await Order.findByIdAndDelete(orderId)
+if(!deletedOrder){
+    return next(new AppError(messages.order.failToDelete , 500))
+}
+// send response
+return res.status(200).json({
+    message: messages.order.deletedSuccessfully,
+    success: true
+});
+}
+// get all orders in the database 
+const getAllOrders = async(req,res,next) =>{
+// fetch all orgers in the database
+const orders = await Order.find()
+// check existance
+if (!orders.length) {
+    return next(new AppError(messages.order.notFound, 404));
+}
+// send response
+return res.status(200).json({
+    message: messages.order.fetchedSuccessfully,
+    success: true,
+    data: orders
+});
+} 
