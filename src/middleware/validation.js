@@ -27,20 +27,23 @@ export const generalFields = {
     password: joi.string().pattern(new RegExp(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/)),
     cPassword : joi.string().valid(joi.ref('password')),
     DOB: joi.string(),
-    otp: joi.string().length(5).required(),
+    otp: joi.string().length(6).required(),
 }
-export const isValid = (schema)=>{
-    return (req,res,next)=>{
-        let data = {...req.body , ...req.params, ...req.query}
+export const isValid = (schemas) => {
+  return (req, res, next) => {
+    const targets = ['body', 'params', 'query'];
 
-      const {error}=  schema.validate(data,{abortEarly : false})
-      if(error){
-        let errArray = [];
-        error.details.forEach(err => {
-            errArray.push(err.message)
-        });
-        return  next(new AppError( errArray , 400))
+    for (const key of targets) {
+      if (schemas[key]) {
+        const { error } = schemas[key].validate(req[key], { abortEarly: false });
+
+        if (error) {
+          const errArray = error.details.map(err => err.message);
+          return next(new AppError(errArray, 400));
+        }
       }
-      next()
     }
-}
+
+    next();
+  };
+};

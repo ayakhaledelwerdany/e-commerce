@@ -139,7 +139,7 @@ return res.status(200).json({
 });
 }
 // get all orders in the database 
-const getAllOrders = async(req,res,next) =>{
+export const getAllOrders = async(req,res,next) =>{
 // fetch all orgers in the database
 const orders = await Order.find()
 // check existance

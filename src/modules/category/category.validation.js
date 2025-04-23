@@ -10,3 +10,6 @@ export const updateCategoryValidation = joi.object({
     name: generalFields.name,
     categoryId :generalFields.objectId.required()
 })
+export const deleteCategoryValidation = joi.object({
+    categoryId: generalFields.objectId.required()
+})

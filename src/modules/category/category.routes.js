@@ -1,8 +1,8 @@
 import { Router  } from "express";
-import { addCategory ,updateCategory,getAllCategories} from "./category.controller.js";
+import { addCategory ,updateCategory,getAllCategories ,deleteCategory} from "./category.controller.js";
 import { fileUpload } from "../../utils/multer.js";
 import { isValid } from "../../middleware/validation.js";
-import { addCategoryValidation,updateCategoryValidation } from "./category.validation.js";
+import { addCategoryValidation,updateCategoryValidation , deleteCategoryValidation} from "./category.validation.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { isAuthenticated } from "../../middleware/authentication.js";
 import { isAuthorized } from "../../middleware/authorization.js";
@@ -24,6 +24,13 @@ categoryRouter.put('/:categoryId',
     fileUpload({folder:'category'}).single('image'),
     isValid(updateCategoryValidation),
     asyncHandler(updateCategory)
+)
+// delete category
+categoryRouter.delete('/:categoryId',
+    isAuthenticated(),
+    isAuthorized([roles.ADMIN , roles.SELLER]),
+    isValid(deleteCategoryValidation),
+    asyncHandler(deleteCategory)
 )
 // get categories 
 categoryRouter.get('/',asyncHandler(getAllCategories)

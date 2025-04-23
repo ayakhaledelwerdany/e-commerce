@@ -5,6 +5,8 @@ import { messages } from "../../utils/constant/messages.js"
 import { sendEmail } from '../../utils/email.js'
 import { generateToken, verifyToken } from '../../utils/token.js'
 import { status } from '../../utils/constant/enum.js'
+import { generateOTP } from '../../utils/generateOTP.js'
+
 
 // signup
 export const signup = async(req,res,next)=>{
@@ -44,51 +46,22 @@ export const signup = async(req,res,next)=>{
     })
 
 }
-// confirm email
-export const confirmEmail = async (req,res,next) =>{
-    const {email , otp} = req.body
-   
-    const user = await User.findOne({email})
-    if(!user){
-        return next(new AppError(messages.user.invalidCredentials, 404))
-    }
-   if(user.confirmEmail === true){
-        return next(new AppError("Email already confirmed", 400))
-    }
-   if(user.otp !== otp){
-    return next(new AppError(messages.user.invalidCredentials, 404))
-   }
-   const currentDate = new Date()
-   if(currentDate > user.otpExpired){
-    return next(new AppError("OTP Expired", 404))
-   }
-   user.confirmEmail = true
-   await user.save()
-    // send response
-    return res.status(201).json({
-        message:"Email Confirmed Successfully",
-        success: true,
-    })
-}
 // verify account
-//export const verifyAccount = async(req,res,next) =>{
-//    //get data from request
-//        const {token} = req.params
-//        const payload = verifyToken({token})
-//        await User.findOneAndUpdate({email:payload.email, status: "Pending"},{status:"Verified"})
-//        await Cart.create({user: payload._id , products: []})
-//        return res.status(200).json({
-//            message: "User Verified Successfully",
-//            success: true,
-//        })      
-//}
-
+export const verifyAccount = async(req,res,next) =>{
+    //get data from request
+        const {token} = req.params
+        const payload = verifyToken({token})
+        await User.findOneAndUpdate({email:payload.email, status: "Pending"},{status:"Verified"})
+        await Cart.create({user: payload._id , products: []})
+        return res.status(200).json({
+            message: "User Verified Successfully",
+            success: true,
+        })      
+}
 // resent otp code
 export const resendOtp = async(req,res,next) =>{
     const { email } = req.body;
-
     //const token =  generateToken({payload:{email , _id : createdUser._id} })
-
     const user = await User.findOne({email})
     if(!user){
         return next(new AppError(messages.user.invalidCredentials, 404))
@@ -153,6 +126,7 @@ export const updatePassword = async(req,res,next) =>{
     const { email, oldPassword, newPassword } = req.body;
     const userId =  req.params.userId
     const authUserId = req.authUser?._id
+
     // Ensure the logged-in user is the owner of the account they are trying to update
     if (authUserId.toString() !== userId) {
         return next(new AppError(messages.user.notAuthorized, 403)); // Forbidden if not the owner
@@ -163,7 +137,7 @@ export const updatePassword = async(req,res,next) =>{
         return next(new AppError(messages.user.invalidCredentials , 400))
     }
     // check password
-    const match = bcrypt.compareSync(oldPassword , userExist.password)
+    const match = bcrypt.compare(oldPassword , userExist.password)
     if(!match){
         return next(new AppError(messages.user.invalidCredentials , 400))
     }
@@ -212,41 +186,28 @@ export const sendForgetCode = async (req,res,next) => {
         success: true,
     });
 }
-export const resetPassword = async(req,res,next) =>{
-    const { email, otp, newPassword } = req.body;
-
-    // Find the user by email
+// reset password
+export const resetPassword = async(req,res,next) => {
+    const { email } = req.body;
     const user = await User.findOne({ email });
+
     if (!user) {
-        return next(new AppError(messages.user.notFound, 404));
+        return next(new AppError('User not found', 404));
     }
 
-    // Check if OTP has expired
-    const currentTime = Date.now();
-    if (user.otpExpired < currentTime) {
-        return next(new AppError("OTP has expired", 400));
-    }
+    const otp = generateOTP(); 
+    const hashedOtp = bcrypt.hashSync(otp, 8);
 
-    // Compare the provided OTP with the hashed OTP in the database
-    const isOtpValid = bcrypt.compareSync(otp, user.otp);
-    if (!isOtpValid) {
-        return next(new AppError("Invalid OTP", 400));
-    }
-
-    // Hash the new password before saving it
-    const hashedPassword = bcrypt.hashSync(newPassword, 8);
-    user.password = hashedPassword;
-
-    // Clear OTP and expiration after successful password reset
-    user.otp = undefined;
-    user.otpExpired = undefined;
+    user.otp = hashedOtp;
+    user.otpExpired = Date.now() + 9 * 60 * 1000; // 9 minutes
 
     await user.save();
 
-    // Send success response
-    return res.status(200).json({
-        message: "Password reset successfully",
+    // TODO: send OTP to user via email
+    console.log("OTP to send (for testing):", otp);
+
+    res.status(200).json({
+        message: "OTP sent successfully",
         success: true,
     });
 }
-   

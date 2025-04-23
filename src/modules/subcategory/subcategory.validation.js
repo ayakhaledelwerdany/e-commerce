@@ -6,3 +6,13 @@ export const addSubcategoryValidation = joi.object({
     category : generalFields.objectId.required()
 
 })
+export const updateSubcategoryValidation = joi.object({
+    name: generalFields.name,
+    categoryId :generalFields.objectId.required(),
+
+})
+export const deleteSubcategoryValidation = {
+    params: joi.object({
+      id: generalFields.objectId.required()
+    })
+  }

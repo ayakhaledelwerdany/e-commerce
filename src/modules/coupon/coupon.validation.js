@@ -7,5 +7,4 @@ export const addCouponValidation = joi.object({
     discountType: generalFields.discountType.required(),
     fromDate: joi.date().greater(Date.now()-24*60*60*60*1000).required(),
     toDate:  joi.date().greater(joi.ref('fromDate')).required(),
-
 })

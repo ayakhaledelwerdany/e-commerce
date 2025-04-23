@@ -47,23 +47,23 @@ export const addToCart = async (req, res, next) => {
     });
 };
 // delete product from cart
-export const deleteProduct = async(req,res, next) =>{
-// get data from req
-const {productId} = req.params
-// check if product exist in cart & update the cart
-const productExistInCart = await Cart.findByIdAndUpdate(
-    {user: req.authUser._id},
-    { $pull: { products: { productId } } }, // Remove product from the cart
-    { new: true } // Return updated cart
-)
-if(!productExistInCart){
-    return next(new AppError(messages.product.notFound ,404))
-}
-// send res
-return res.status(200).json({
-    message: messages.product.deletedSuccessfully,
-    success: true,
-    data : Cart
-});
-}
-
+export const deleteProduct = async (req, res, next) => {
+    const { productId } = req.params;
+  
+    const updatedCart = await Cart.findOneAndUpdate(
+      { user: req.authUser._id }, // ✅ Valid filter
+      { $pull: { products: { productId } } }, // ✅ Pull product by productId
+      { new: true } // ✅ Return updated cart
+    );
+  
+    if (!updatedCart) {
+      return next(new AppError(messages.product.notFound, 404));
+    }
+  
+    return res.status(200).json({
+      message: messages.product.deletedSuccessfully,
+      success: true,
+      data: updatedCart, // ✅ Return the updated cart
+    });
+  };
+  
